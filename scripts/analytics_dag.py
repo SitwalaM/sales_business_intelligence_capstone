@@ -89,4 +89,24 @@ def write_prediction():
     return "Predictions Updated to DB"
 
 
+# python operators for the pipeline are defined below
+extract = PythonOperator(
+    task_id='extract',
+    python_callable=extract_data,
+    dag=dag,
+)
 
+model = PythonOperator(
+    task_id='predictions',
+    python_callable=prophet_predict,
+    dag=dag,
+)
+
+update_db = PythonOperator(
+    task_id='update_database',
+    python_callable=write_prediction,
+    dag=dag,
+)
+
+# define pipeline and dependencies here
+extract >> model >> update_db
