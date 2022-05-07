@@ -40,4 +40,11 @@ def get_customers_per_month(df):
     return df
 
 
+def get_forecast_total(df, last_day):
+
+    df = df.copy()
+    
+
+
+    return forecast_total
 

@@ -6,6 +6,7 @@ from datetime import date
 import mysql.connector
 from sqlalchemy import create_engine
 from app_utilities import *
+import plotly.express as px
  
 
 st.title("Sales Dashboard")
@@ -51,18 +52,25 @@ delta_customer_count =  unique_customers_now - unique_customers_last_month
 
 #-------------------------- Titel and Metrics------------------------------------
 st.markdown('### KPIs')
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 col1.metric(label = "Sales Today", value = "K "+ str(sales_today) , delta = day_delta)
 col2.metric("Sales this Month", value = month_sales_now, delta = month_sales_now - month_sales_last_month )
 col3.metric("Customer Count", value = unique_customers_now , delta = delta_customer_count.item())
+col4.metric("Sales Forecast", value = unique_customers_now , delta = delta_customer_count.item())
 
 
 #-------------------------Upload latest data --------------------------------------
 with st.sidebar:
-  uploaded_file = st.file_uploader("Upload Latest Sales Data", type = ['csv']) 
+  uploaded_file = st.file_uploader("Upload Latest Sales Data - For Official Use Only", type = ['csv']) 
   if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     fs = s3fs.S3FileSystem(anon=False)
     filename = str(date.today()) + ".csv"
     df.to_csv('s3://salonanalytics/'+filename)
 
+
+monthly_sales = px.line(monthly_grouped_sales, x = monthly_grouped_sales.index , y = "Total")
+st.plotly_chart(monthly_sales)
+
+customer_count = px.line(customer_count_per_month, x = monthly_grouped_sales.index , y = "Customer")
+st.plotly_chart(customer_count)
