@@ -15,7 +15,7 @@ def group_by_month(df):
 
     Returns
     ---------
-    df: pandas dataframe pivoted by the month/year
+    df: pandas dataframe pivoted by the month-year
     '''
 
     df = df.sort_values("Date", ascending = True)
