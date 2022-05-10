@@ -36,6 +36,18 @@ def update_db_with_data(credentials, dataframe, table_name, dtypes_dictionary):
     return None
 
 def prepare_for_prophet(customer_data):
+    '''
+    prepares data for prophet model, 
+
+    Parameters
+    ----------
+    customer_data: pandas dataframe of the customer data
+
+    Returns
+    --------
+    ts: pandas dataframe prepared for propher model with columns "ds" and y
+
+    '''
 
     filt_df = customer_data[customer_data["Date"]>"2020-10-1"]    #filter to remove corrupted data
     grouped_day = filt_df.groupby("Date", as_index = False).sum()
