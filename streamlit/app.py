@@ -12,7 +12,7 @@ import plotly.express as px
 
  
 #st.set_page_config(layout="wide")
-st.title("Sales Dashboard")
+st.title("Sales Insights")
 
 
 # Database connection
@@ -64,7 +64,7 @@ forecast_month = filtered_forecast.ds.max().strftime(" %B")
 col1, col2, col3, col4 = st.columns([2,2,2,1.5])
 col1.metric(label = "Sales Today", value = f"ZMW {sales_today:,g}", delta = str(round(day_delta*100/sales_yesterday)) + "%")
 col2.metric("Sales this Month", value = f"ZMW {month_sales_now:,g}", delta = str(round((month_sales_now - month_sales_last_month)*100/month_sales_last_month )) + "%")
-col3.metric("Sales Forecast:" + forecast_month  ,  value = f"ZMW {total_forecast:,g}" )
+col3.metric("7-Day Sales Forecast:" ,  value = f"ZMW {total_forecast:,g}" )
 col4.metric("Customer Count", value = f"{unique_customers_now:,g}", delta = delta_customer_count.item())
 st.markdown("""---""")
 
@@ -77,7 +77,7 @@ with st.sidebar:
     filename = str(date.today()) + ".csv"
     df.to_csv('s3://salonanalytics/'+filename)
 
-
+#------------------------Plot the Outputs----------------------------------------------
 monthly_sales = px.line(monthly_grouped_sales, x = monthly_grouped_sales.index , y = "Total", title = "Monthly Sales")
 customer_count = px.line(customer_count_per_month, x = monthly_grouped_sales.index , y = "Customer", title = "Customer Count")
 growth_budget_plot = px.line(growth_budget, x = "months" , y = ["Regained","Churned","New"], title = "Growth Budget")
@@ -88,6 +88,4 @@ fig1 = st.plotly_chart(monthly_sales, height = 210, use_container_width=True)
 fig2 = st.plotly_chart(customer_count, height= 210, use_container_width=True)
 fig2 = st.plotly_chart(growth_budget_plot, height= 210, use_container_width=True)
 fig2 = st.plotly_chart(Net_Growth, height= 210, use_container_width=True)
-
-
 
