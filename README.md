@@ -30,6 +30,10 @@ The implementation is planned for deployment completely in the cloud. A MySQL se
 * MySQL 
 * Streamlit - front-end web app for viewing insights
 
+# Deployment
+
+Link to front-end: [app](https://share.streamlit.io/sitwalam/sales_business_intelligence_capstone/main/streamlit/app.py)
+
 # Conclusions and Future Work
 
 The insights presented in [Notebook](https://github.com/SitwalaM/sales_business_intelligence_capstone/blob/main/overview_notebook.ipynb) can provide a business owner a basis for decisions that can drive growth. 
