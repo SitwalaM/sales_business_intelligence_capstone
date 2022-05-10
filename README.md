@@ -33,6 +33,7 @@ The implementation is planned for deployment completely in the cloud. A MySQL se
 # Deployment
 
 Link to front-end: [app](https://share.streamlit.io/sitwalam/sales_business_intelligence_capstone/main/streamlit/app.py)
+![](https://github.com/SitwalaM/sales_business_intelligence_capstone/blob/main/images/photo_app.PNG)
 
 # Conclusions and Future Work
 
