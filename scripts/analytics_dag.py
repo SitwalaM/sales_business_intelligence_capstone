@@ -3,17 +3,24 @@ from analytics_modules import *
 from datetime import timedelta
 from datetime import datetime
 from datetime import datetime as dt
+import sqlalchemy
+from datetime import date
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.utils.dates import days_ago
+import configparser
 import s3fs
 import os
+import sys
 
+sys.path.append('../../')
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2022, 4, 8),
+    'start_date': datetime(2022, 5, 4),
     'email': ['sitwala.mundia@gmail.com'],
     'email_on_failure': True,
     'email_on_retry': False,
@@ -25,28 +32,36 @@ default_args = {
 dag = DAG(
     'sales_analytics',
     default_args=default_args,
-    description='DAG for twitter monitor',
-    schedule_interval = "0 */12 * * *",
+    description='DAG sales analyrics',
+    schedule_interval = "@daily",
+  
 )
 
 
 def extract_data():
-    fs = s3fs.S3FileSystem(anon=False)
-    filename = str(dt.date.today()) + ".csv"
-
-    def read_file(filename):
-        with fs.open(filename) as f:
-            return f.read().decode("utf-8")
-    file = read_file("s3://salonanalytics/data.csv")
+    # dag Python operator to extract raw customer data
     
-    customer_data = pd.read_csv(file)
-    customer_data.to_csv(filename)
+    config = configparser.ConfigParser()
+    config.read("./credentials.ini")
+    key = config["aws"]["AWS_ACCESS_KEY_ID"]
+    secret = config["aws"]["AWS_SECRET_ACCESS_KEY"]
+    s3 = s3fs.S3FileSystem(anon=False, key=key, secret=secret)
+
+    filename = str(date.today()) + ".csv"
+    customer_data = pd.read_csv('s3://salonanalytics/'+filename)
+
+    # fixes error in initial dataset
+    customer_data['Date']=pd.to_datetime(customer_data['Date'].astype(str))
+    customer_data = customer_data[customer_data['Date']> "2020-09-30"]
+    #customer_data = customer_data[customer_data['Date']< "2021-11-15"]
+    customer_data.to_csv(filename)      # save to file
 
     return "Data Extracted and Saved to Disk"
 
 def prophet_predict():
+    # dag Python operator to run forecast 
 
-    filename = str(dt.date.today()) + ".csv"
+    filename = str(date.today()) + ".csv"
     customer_data = pd.read_csv(filename)
     ts = prepare_for_prophet(customer_data)
 
@@ -65,17 +80,20 @@ def prophet_predict():
     model = forecast_by_Prophet(ts, zambia_holidays)
     output = make_forecast(model,refit = False,period=7, train_data = None)
 
-    output = output.to_csv("pedict_"+file_name)
+    output = output.to_csv("pedict_"+filename)
 
     return "Prediction Complete and Saved to Disk"
 
 def write_prediction():
+    # dag python operator that writes the data to database
 
-    credentials = {"user" : 'root',
-                        "passw": '***',
-                        "host" :  'localhost',
+    global credentials
+    
+    credentials = {"user" : 'remote',
+                        "passw": '{}',
+                        "host" :  '{}',
                         "port" : 3306,
-                       " database" : 'salon_analytics'
+                       "database" : 'salon_analytics'
                 }
     dtypes_dictionary = {"ds": sqlalchemy.types.DateTime() ,
                    "yhat": sqlalchemy.types.Numeric,
@@ -83,10 +101,32 @@ def write_prediction():
                     "yhat_upper": sqlalchemy.types.Numeric,
                     "trend": sqlalchemy.types.Numeric       
                     }
-   
+    
+    filename = str(date.today()) + ".csv"
+    dataframe = pd.read_csv("pedict_"+filename)
     update_db_with_data(credentials, dataframe, "forecasts",  dtypes_dictionary)
 
     return "Predictions Updated to DB"
+
+def write_transactions():
+    # dag python operator that writes the data to database
+
+    credentials = {"user" : 'remote',
+                        "passw": '{}',
+                        "host" :  '{}',
+                        "port" : 3306,
+                       "database" : 'salon_analytics'
+                }
+    dtypes_dictionary = {"Date": sqlalchemy.types.DateTime() ,
+                        "Customer": sqlalchemy.types.VARCHAR(length=255),
+                        "Total": sqlalchemy.types.Numeric
+                         }
+    
+    file = str(date.today()) + ".csv"
+    dataframe = pd.read_csv(file)
+    update_db_with_data(credentials, dataframe, "transactions",  dtypes_dictionary)
+    
+    return  "Transactions Updated to DB"
 
 
 # python operators for the pipeline are defined below
@@ -102,11 +142,17 @@ model = PythonOperator(
     dag=dag,
 )
 
-update_db = PythonOperator(
-    task_id='update_database',
+update_db_predictions = PythonOperator(
+    task_id='write_predictions',
     python_callable=write_prediction,
     dag=dag,
 )
 
+update_db_transactions = PythonOperator(
+    task_id='write_transactions',
+    python_callable=write_transactions,
+    dag=dag,
+)
+
 # define pipeline and dependencies here
-extract >> model >> update_db
+extract >> update_db_transactions >> model >> update_db_predictions
