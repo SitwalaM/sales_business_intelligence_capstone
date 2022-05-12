@@ -10,14 +10,14 @@ A sales forecasting model using Prophet is implemented to help the client (shop 
 
 Clustering is implemented using Recency, Frequency and Monetary value of each customer. The segmentation allows for the shop owner to target specific customers for promotions and retention calls.
 
-### 3. Customer Growth Budget
+### 3. Customer Growth Accounting
 
-The customer growth budget tracks the growth of customers and classifies them into the following categories;
+The customer growth accounting tracks the growth of customers and classifies them into the following categories;
 * New: First time visitors
 * Churned: Customers who haven't visited for 2 months consecutively (defined by the client)
 * Regained: Previously churned customers who have visited the shop again.
 
-Growth budget is typically used in subscription based services but it can be a powerful insight in this scenario as salons have a database of regular visitors who can be treated as subcribers for analysis purposes.
+Growth accounting is typically used in subscription based services but it can be a powerful insight in this scenario as salons have a database of regular visitors who can be treated as subcribers for analysis purposes.
 
 ### 4. Cloud Implementation and Orchestration
 
@@ -41,7 +41,7 @@ The insights presented in [Notebook](https://github.com/SitwalaM/sales_business_
 
 * The simple forecasting model implemented helps the owner plan for stock and worker's availability
 * The customer segmentation shows that less frequent and low spend customers drive most of the revenue. This insight can help drive strategy on marketing. 
-* The growth budget shows that rate of churn and new customers is almost stationary. Perhaps the definition of churn should be revised to more than two months.
+* The growth accounting shows that rate of churn and new customers is almost stationary. Perhaps the definition of churn should be revised to more than two months.
 
 ## Future Work
 
